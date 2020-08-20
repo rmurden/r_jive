@@ -149,7 +149,8 @@ get_joint_scores <- function(blocks, block_svd, initial_signal_ranks, sv_thresho
                                                                     num_samples=n_wedin_samples)
             }
 
-            wedin_samples <-  K - colSums(block_wedin_samples)
+            temp <-  cbind(colSums(cos(block_wedin_samples)^2), 1)
+            wedin_samples <- apply(temp, 1, max)
             wedin_svsq_threshold <- quantile(wedin_samples, .05)
 
             rank_sel_results[['wedin']] <- list(block_wedin_samples=block_wedin_samples,
@@ -254,7 +255,7 @@ get_final_decomposition <- function(X, joint_scores, sv_threshold, full=TRUE){
 #' @param full Boolean. Do we compute the full J, I matrices or just the SVD (set to FALSE to save memory).
 get_individual_decomposition <- function(X, joint_scores, sv_threshold, full=TRUE){
 
-    if(is.na(joint_scores)){
+    if(is.na(joint_scores[1,1])){
         indiv_decomposition <- get_svd(X)
     } else{
         X_orthog <- (diag(dim(X)[1]) - joint_scores %*% t(joint_scores)) %*% X
@@ -284,7 +285,7 @@ get_individual_decomposition <- function(X, joint_scores, sv_threshold, full=TRU
 #' @param full Boolean. Do we compute the full J, I matrices or just the SVD (set to FALSE to save memory).
 get_joint_decomposition <- function(X, joint_scores, full=TRUE){
 
-    if(is.na(joint_scores)){
+    if(is.na(joint_scores[1,1])){
         joint_decomposition <- list(full= NA, rank=0, u=NA, d=NA, v=NA)
         return(joint_decomposition)
     }

@@ -1,5 +1,5 @@
 #'
-#' Esimates the wedin bound for a data matrix with the resampling procedure.
+#' Estimates the wedin bound for a data matrix with the resampling procedure.
 #'
 #' returns min(max(||E tilde{V}||, ||E^T tilde{U}||) / sigma_min(widetilde{A}), 1) from equation (7)
 #'
@@ -15,16 +15,18 @@ get_wedin_bound_samples <- function(X, SVD, signal_rank, num_samples=1000){
     U_sampled_norms <- wedin_bound_resampling(X=X,
                                               perp_basis=U_perp,
                                               right_vectors=FALSE,
-                                              num_samples=num_samples)
+                                              num_samples=num_samples,
+                                              signal_rank)
 
     V_perp <- SVD[['v']][ , -(1:signal_rank)]
     V_sampled_norms <- wedin_bound_resampling(X=X,
                                               perp_basis=V_perp,
                                               right_vectors=TRUE,
-                                              num_samples=num_samples)
+                                              num_samples=num_samples,
+                                              signal_rank)
 
     sigma_min <- SVD[['d']][signal_rank]
-    wedin_bound_samples <- mapply(function(u, v)  min(max(u, v)/sigma_min, 1)^2, U_sampled_norms, V_sampled_norms)
+    wedin_bound_samples <- mapply(function(u, v)  asin(min(max(u, v)/sigma_min, 1)), U_sampled_norms, V_sampled_norms)
 
     wedin_bound_samples
 }
@@ -36,9 +38,10 @@ get_wedin_bound_samples <- function(X, SVD, signal_rank, num_samples=1000){
 #' @param perp_basis Matrix. Either U_perp or V_perp: the remaining left/right singluar vectors of X after estimating the signal rank.
 #' @param right_vectors Boolean. Right multiplication or left multiplication.
 #' @param num_samples Integer. Number of vectors selected for resampling procedure.
-wedin_bound_resampling <- function(X, perp_basis, right_vectors, num_samples=1000){
+#' @param signal_rank Integer. The estimated signal rank of X.
+wedin_bound_resampling <- function(X, perp_basis, right_vectors, num_samples=1000, signal_rank){
 
-    rank <- dim(perp_basis)[2]
+    rank <- signal_rank
     resampled_norms <- rep(0, num_samples)
 
     for(s in 1:num_samples){
@@ -57,8 +60,7 @@ wedin_bound_resampling <- function(X, perp_basis, right_vectors, num_samples=100
         }
 
         # operator L2 norm
-        resampled_norms[s] <- norm(resampled_projection,
-                                   type='2')
+        resampled_norms[s] <- svd(resampled_projection)[['d']][1]
     }
 
     resampled_norms
