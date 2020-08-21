@@ -255,7 +255,7 @@ get_final_decomposition <- function(X, joint_scores, sv_threshold, full=TRUE){
 #' @param full Boolean. Do we compute the full J, I matrices or just the SVD (set to FALSE to save memory).
 get_individual_decomposition <- function(X, joint_scores, sv_threshold, full=TRUE){
 
-    if(is.na(joint_scores[1,1])){
+    if(sum(is.na(joint_scores))>0){
         indiv_decomposition <- get_svd(X)
     } else{
         X_orthog <- (diag(dim(X)[1]) - joint_scores %*% t(joint_scores)) %*% X
@@ -277,7 +277,7 @@ get_individual_decomposition <- function(X, joint_scores, sv_threshold, full=TRU
     indiv_decomposition
 }
 
-#' Computes the joint matix for a data block.
+#' Computes the joint matrix for a data block.
 #'
 #'
 #' @param X Matrix. The original data matrix.
@@ -285,7 +285,7 @@ get_individual_decomposition <- function(X, joint_scores, sv_threshold, full=TRU
 #' @param full Boolean. Do we compute the full J, I matrices or just the SVD (set to FALSE to save memory).
 get_joint_decomposition <- function(X, joint_scores, full=TRUE){
 
-    if(is.na(joint_scores[1,1])){
+    if(sum(is.na(joint_scores))>0){
         joint_decomposition <- list(full= NA, rank=0, u=NA, d=NA, v=NA)
         return(joint_decomposition)
     }
