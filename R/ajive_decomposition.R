@@ -31,7 +31,7 @@ ajive <- function(blocks, initial_signal_ranks, full=TRUE, n_wedin_samples=1000,
     }
 
     if(sum(sapply(blocks,function(X) any(is.na(X)))) > 0){
-        stop('Some of the blocks has missing data -- ajive expects full data matrices.')
+        stop('Some of the blocks have missing data -- ajive expects full data matrices.')
     }
 
     # TODO: should we give the option to center the data?
@@ -72,7 +72,7 @@ ajive <- function(blocks, initial_signal_ranks, full=TRUE, n_wedin_samples=1000,
     for(k in 1:K){
         block_decomps[[k]] <- get_final_decomposition(X=blocks[[k]],
                                                       joint_scores=joint_scores,
-                                                      sv_threshold=sv_thresholds[k])
+                                                      signal_rank=initial_signal_ranks[k])
     }
 
     jive_decomposition <- list(block_decomps=block_decomps)
@@ -228,12 +228,12 @@ get_joint_scores <- function(blocks, block_svd, initial_signal_ranks, sv_thresho
 #'
 #' @param X Matrix. The original data matrix.
 #' @param joint_scores Matrix. The basis of the joint space (dimension n x joint_rank).
-#' @param sv_threshold Numeric vector. The singular value thresholds from the initial signal rank estimates.
+#' @param signal_rank Initial signal rank
 #' @param full Boolean. Do we compute the full J, I matrices or just the SVDs (set to FALSE to save memory)..
-get_final_decomposition <- function(X, joint_scores, sv_threshold, full=TRUE){
+get_final_decomposition <- function(X, joint_scores, signal_rank, full=TRUE){
 
     jive_decomposition <- list()
-    jive_decomposition[['individual']] <- get_individual_decomposition(X, joint_scores, sv_threshold, full)
+    jive_decomposition[['individual']] <- get_individual_decomposition(X, joint_scores, signal_rank, full)
     jive_decomposition[['joint']] <- get_joint_decomposition(X, joint_scores, full)
 
 
@@ -251,9 +251,9 @@ get_final_decomposition <- function(X, joint_scores, sv_threshold, full=TRUE){
 #'
 #' @param X Matrix. The original data matrix.
 #' @param joint_scores Matrix. The basis of the joint space (dimension n x joint_rank).
-#' @param sv_threshold Numeric vector. The singular value thresholds from the initial signal rank estimates.
+#' @param signal_rank Initial signal rank
 #' @param full Boolean. Do we compute the full J, I matrices or just the SVD (set to FALSE to save memory).
-get_individual_decomposition <- function(X, joint_scores, sv_threshold, full=TRUE){
+get_individual_decomposition <- function(X, joint_scores, signal_rank, full=TRUE){
 
     if(sum(is.na(joint_scores))>0){
         indiv_decomposition <- get_svd(X)
@@ -263,7 +263,7 @@ get_individual_decomposition <- function(X, joint_scores, sv_threshold, full=TRU
     }
 
 
-    indiv_rank <- sum(indiv_decomposition[['d']] > sv_threshold)
+    indiv_rank <- signal_rank - ncol(joint_scores)
 
     indiv_decomposition <- truncate_svd(decomposition=indiv_decomposition, rank=indiv_rank)
 

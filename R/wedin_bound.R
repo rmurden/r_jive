@@ -11,14 +11,14 @@
 get_wedin_bound_samples <- function(X, SVD, signal_rank, num_samples=1000){
 
     # resample for U and V
-    U_perp <- SVD[['u']][ , -(1:signal_rank)]
+    U_perp <- matrix(SVD[['u']][ , -(1:signal_rank)], nrow = nrow(SVD[['u']]))
     U_sampled_norms <- wedin_bound_resampling(X=X,
                                               perp_basis=U_perp,
                                               right_vectors=FALSE,
                                               num_samples=num_samples,
                                               signal_rank)
 
-    V_perp <- SVD[['v']][ , -(1:signal_rank)]
+    V_perp <- matrix(SVD[['v']][ , -(1:signal_rank)], nrow = nrow(SVD[['v']]))
     V_sampled_norms <- wedin_bound_resampling(X=X,
                                               perp_basis=V_perp,
                                               right_vectors=TRUE,
@@ -60,7 +60,7 @@ wedin_bound_resampling <- function(X, perp_basis, right_vectors, num_samples=100
         }
 
         # operator L2 norm
-        resampled_norms[s] <- svd(resampled_projection)[['d']][1]
+        resampled_norms[s] <- svd(resampled_projection, nu = 0, nv = 0)[['d']][1]
     }
 
     resampled_norms
